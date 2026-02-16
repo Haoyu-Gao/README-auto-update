@@ -466,9 +466,6 @@ def run_experiment(model_sanitized_name):
             repo_name = data["repo_name"]
             pr_number = data["pr_number"]
 
-            # Uncomment to enable filtering if files exist
-            # if (repo_name, pr_number) not in insufficient_entries and (repo_name, pr_number) not in sufficient_entries:
-            #     continue
             
             try:
                 pr_description = data['pr_title'] + " " + data['pr_description']
