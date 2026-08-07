@@ -189,7 +189,7 @@ if __name__ == "__main__":
     models_list = ["google/gemma-3-27b-it",
                    "Qwen/Qwen3-32B",
                    "kosbu/Llama-3.3-70B-Instruct-AWQ" ]
-    prompts_list = prompts.prompt_list_new
+    prompts_list = prompts.C1_prompt_list
 
 
     model_name = models_list[model_id]
