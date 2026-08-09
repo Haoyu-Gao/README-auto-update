@@ -23,8 +23,11 @@ from metrics import (index_recall, parse_generation_to_json, prediction_to_set,
 from readme_parsing import build_tree_with_paragraph_mapping
 
 CONFIGS = [
+    ("gemma-3-27b-it, static", "static-gemma"),
     ("gemma-3-27b-it, agentic", "agentic-gemma"),
+    ("Qwen3-32B, static", "static-qwen"),
     ("Qwen3-32B, agentic", "agentic-qwen"),
+    ("Llama-3.3-70B-Instruct-AWQ, static", "static-llama"),
     ("Llama-3.3-70B-Instruct-AWQ, agentic", "agentic-llama"),
     ("Qwen3-32B, baseline prompt", "baseline-Qwen3-32B"),
 ]
