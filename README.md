@@ -6,13 +6,13 @@ This is the replication for paper titled "Does My README File Need To Be Updated
 
 `agent_mode` includes the agent implementation, while `pipeline_mode` includes the static version encompassing each component. Please refer to the `prompts.py` under each folder for the design. The final guard that decides whether a recommendation is delivered is in `agent_mode/guard_positive.py` and `agent_mode/guard_negative.py`, and its prompt is `agent_guard_prompt` in `agent_mode/prompts.py`. In folder `failure_analysis` we attached an excel spreadsheet for our qualitative analysis.
 
-In folder `output` we release the model outputs behind the end-to-end results. There is one file per configuration and per set, and the agentic files cover the full evaluation set of 10,702 positive and 14,809 negative pull requests. Each line is one pull request and carries the decision of every stage it went through, from `classifier_decision` through `examiner_critique` to `guard_output`, together with the generated section ids in `generated_output` and the ground truth in `ground_truth_idx`. The field `final_recommendation` is what the pipeline would have shown to a developer.
+In folder `output` we release the model outputs behind the end-to-end results. There is one file per configuration and per set, and the agentic files cover the full evaluation set of 10,452 positive and 14,559 negative pull requests. The 250 positive and 250 negative pull requests we used during prompt development are not part of the evaluation set and are left out. Each line is one pull request and carries the decision of every stage it went through, from `classifier_decision` through `examiner_critique` to `guard_output`, together with the generated section ids in `generated_output` and the ground truth in `ground_truth_idx`. The field `final_recommendation` is what the pipeline would have shown to a developer.
 
 `evaluation` contains the code that scores the recommendations against the sections the developer edited.
 
 ## How to run
 
-The evaluation scores the recommendations a configuration delivered and reports Index Recall, MRR and Hierarchical Recall. It rebuilds the README structure from the dataset, so download the dataset first and point the script at it:
+The evaluation reports End-to-end Success over all positive pull requests, and Index Recall, MRR and Hierarchical Recall over the recommendations a configuration delivered. A delivered recommendation whose output cannot be parsed counts as a localisation failure. It rebuilds the README structure from the dataset, so download the dataset first and point the script at it:
 
 ```
 cd evaluation

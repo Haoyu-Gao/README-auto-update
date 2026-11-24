@@ -1,8 +1,9 @@
 """Index-level evaluation of the files in output/.
 
 Scores the recommendations a configuration actually delivered against the
-sections the developer edited, and reports Index Recall, MRR and Hierarchical
-Recall at levels 1 to 4.
+sections the developer edited, and reports End-to-end Success over all positive
+pull requests and Index Recall, MRR and Hierarchical Recall at levels 1 to 4
+over the delivered ones.
 
 The README structure is rebuilt from the prepared dataset, so the dataset has
 to be downloaded first, see the Dataset section of the top-level README.
@@ -61,7 +62,7 @@ def predicted_sections(entry):
 def score(path, index_dictionary, tree_cache):
     recalls, ranks = [], []
     per_level = defaultdict(list)
-    scored = unparseable = 0
+    scored = unparseable = complete = 0
     with open(path) as handle:
         for line in handle:
             line = line.strip()
@@ -71,14 +72,18 @@ def score(path, index_dictionary, tree_cache):
             if not delivered(entry):
                 continue
             ground_truth = entry.get("ground_truth_idx")
+            if not isinstance(ground_truth, list):
+                continue
             prediction = predicted_sections(entry)
             predicted = prediction_to_set(prediction) if prediction is not None else None
-            if predicted is None or not isinstance(ground_truth, list):
+            if predicted is None:
                 unparseable += 1
-                continue
+                prediction, predicted = [], set()
             scored += 1
             recalls.append(index_recall(ground_truth, predicted))
             ranks.append(reciprocal_rank(ground_truth, predicted))
+            if ground_truth and set(ground_truth) <= predicted:
+                complete += 1
 
             key = (entry["repo_name"], entry["pr_number"])
             if key not in index_dictionary:
@@ -105,6 +110,7 @@ def score(path, index_dictionary, tree_cache):
     return {
         "n": scored,
         "unparseable": unparseable,
+        "complete": complete,
         "ir": mean(recalls),
         "mrr": mean(ranks),
         "hr": [mean(per_level[level]) for level in (1, 2, 3, 4)],
@@ -124,19 +130,25 @@ def main():
     index_dictionary = hierarchical_eval.load_index_dictionary(args.dataset)
     tree_cache = {}
 
-    print("%-38s %7s %7s %7s  %s" % ("Configuration", "n", "IR", "MRR",
-                                     "HR (L1, L2, L3, L4)"))
+    paths = {prefix: os.path.join(args.output_dir, prefix + "-positive.jsonl")
+             for _, prefix in CONFIGS}
+    positives = max(sum(1 for line in open(path) if line.strip())
+                    for path in paths.values() if os.path.exists(path))
+
+    print("%-38s %7s %7s %7s %7s  %s" % ("Configuration", "n", "E2E", "IR", "MRR",
+                                         "HR (L1, L2, L3, L4)"))
     for label, prefix in CONFIGS:
         if args.model and args.model.lower() not in prefix.lower():
             continue
-        path = os.path.join(args.output_dir, prefix + "-positive.jsonl")
+        path = paths[prefix]
         if not os.path.exists(path):
             print("%-38s %s" % (label, "file not found"))
             continue
         result = score(path, index_dictionary, tree_cache)
         hr = ", ".join("%.2f" % value for value in result["hr"])
-        print("%-38s %7d %7.4f %7.4f  (%s)" % (label, result["n"], result["ir"],
-                                               result["mrr"], hr))
+        print("%-38s %7d %7.4f %7.4f %7.4f  (%s)" % (
+            label, result["n"], result["complete"] / positives, result["ir"],
+            result["mrr"], hr))
 
 
 if __name__ == "__main__":
